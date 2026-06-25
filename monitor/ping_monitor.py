@@ -5,6 +5,7 @@ Monitors ping latency and displays real-time statistics
 import subprocess
 import re
 import sys
+import time
 import statistics
 from datetime import datetime
 from collections import deque
@@ -71,6 +72,14 @@ class PingMonitor:
         except Exception as e:
             print(f"Error pinging: {e}")
             return {"success": False, "latency": None}
+
+    def ping_batch(self, count):
+        """Perform a batch of ICMP pings and return a list of results."""
+        results = []
+        for _ in range(count):
+            results.append(self.ping_once())
+            time.sleep(self.interval)
+        return results
     
     def get_statistics(self):
         """Calculate statistics for collected latencies"""

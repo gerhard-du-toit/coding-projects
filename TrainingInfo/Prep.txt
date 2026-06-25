@@ -1,3 +1,12 @@
+Important Chats:
+
+https://chatgpt.com/c/6a0de065-3800-83ea-9a87-3613941d9749
+
+Accounts:
+
+GitHub - gmail
+
+
 My recommendation for you specifically
 Phase 1 — Start Simple (No WSL)
 
@@ -16,11 +25,62 @@ learn commits/branches/releases
 
 This gets you productive quickly.
 
-gduto@DESKTOP-KQDP9T6 MINGW64 ~
-$ py --version
-Python 3.14.5
+-----------
+What I did
+----------
+I added Python for windows
+I installed Git for windows: https://git-scm.com/download/win?utm_source=chatgpt.com
+Installed VS Code
+Linked GitHub account (left bottom Icon it can be seen gerhard-du-toit)
+Installed Python Extensions (Extension options are in left side bar)
+In GitHub I created a new repository (clicked on +)
+  left README off
+  left .gitignore off
+  left license off
+appy.py is my main file and can run it with "py app.py" which starts a process that listens on port 5000
+appy.py references a index.html that is in my template folder
+
+Created .github/workflows and in .GitHub/workflows is a python-ci.yml that is the GitHub Actions pipeline which will trigger a pipeline in GitHub. Pipeline has a run-on option. GitHub will start a Ubuntu VM and install dependancies and compile the app.py
+Can see pipeline ru in GitHub ACtions
+populated a requirements file which is requirements.txt
+buld docker file contents and can then build a docker with 
+  docker build -t latencymonitor .
+Can save docker image as a file etc
+  docker save -o latencymonitor.tar latencymonitor
+Can then be loaded on another machine
+  docker load -i latencymonitor.tar
 
 gduto@DESKTOP-KQDP9T6 MINGW64 ~
 $ py --version
 Python 3.14.5
 
+gduto@DESKTOP-KQDP9T6 MINGW64 ~
+$ py --version
+Python 3.14.5
+
+------------
+General Tips
+------------
+Selecting Powershell:
+
+  Windows key + X
+
+Starting WSL
+
+  in Powersehll type "wsl"
+
+Docker
+  Need to start docker desktop to be able to run the docker
+
+  Can check docker images with:
+    PS D:\CodingProjects> docker images
+                                                                                                    i Info →   U  In Use
+    IMAGE                   ID             DISK USAGE   CONTENT SIZE   EXTRA
+    latencymonitor:latest   6dd5686f1049       1.62GB          415MB    U
+    PS D:\CodingProjects>
+
+Git
+  Save       = Save file locally
+  git add    = Stage changes
+  git commit = Create version snapshot
+  git push   = Upload to GitHub

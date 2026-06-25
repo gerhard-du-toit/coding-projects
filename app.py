@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, IPAddress
+from wtforms import StringField, IntegerField, SubmitField
+from wtforms.validators import DataRequired, IPAddress, NumberRange
 import ipaddress
+import statistics
 from monitor.ping_monitor import PingMonitor
 
 app = Flask(__name__)
@@ -18,6 +19,14 @@ class IPAddressForm(FlaskForm):
             IPAddress(message='Invalid IP address format')
         ]
     )
+    ping_count = IntegerField(
+        'Ping Count',
+        default=4,
+        validators=[
+            DataRequired(message='Ping count is required'),
+            NumberRange(min=1, max=20, message='Ping count must be between 1 and 20')
+        ]
+    )
     submit = SubmitField('Ping')
 
 
@@ -30,16 +39,35 @@ def home():
     
     if form.validate_on_submit():
         ip = form.ip_address.data
+        ping_count = form.ping_count.data
         try:
             # Validate IP address
             ipaddress.ip_address(ip)
-            monitor = PingMonitor(host=ip)
-            ping_data = monitor.ping_once()
+            monitor = PingMonitor(host=ip, window_size=ping_count, interval=0.5)
+            ping_results = monitor.ping_batch(ping_count)
+            successful = [r for r in ping_results if r.get('success')]
+            latencies = [r.get('latency') for r in successful if r.get('latency') is not None]
 
-            if ping_data.get('success'):
-                result = f"Ping successful to {ip}: {ping_data.get('latency'):.2f} ms"
+            ping_data = {
+                'host': ip,
+                'count': ping_count,
+                'results': ping_results,
+                'success_count': len(successful),
+                'loss_count': ping_count - len(successful),
+                'min_latency': min(latencies) if latencies else None,
+                'max_latency': max(latencies) if latencies else None,
+                'avg_latency': statistics.mean(latencies) if latencies else None,
+                'max_display_latency': max(latencies) if latencies else 100
+            }
+
+            if ping_data['success_count'] > 0:
+                result = (
+                    f"Pinged {ip} {ping_count} times: "
+                    f"{ping_data['success_count']} success, {ping_data['loss_count']} loss, "
+                    f"avg {ping_data['avg_latency']:.2f} ms"
+                )
             else:
-                error = f"Ping failed for {ip}."
+                error = f"All pings to {ip} failed."
         except ValueError:
             error = "Invalid IP address"
     

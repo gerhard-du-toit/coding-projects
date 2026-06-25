@@ -110,6 +110,53 @@
             color: #333;
             font-size: 15px;
         }
+        .chart-card {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #c8e6c9;
+            border-radius: 6px;
+            background: #f0fbf2;
+        }
+        .chart-card h4 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+        .chart-grid {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 10px 0 0 0;
+            min-height: 180px;
+            border-top: 1px solid #d4edda;
+        }
+        .bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 40px;
+        }
+        .chart-bar {
+            width: 100%;
+            min-height: 20px;
+            background: #4CAF50;
+            position: relative;
+            border-radius: 4px 4px 0 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            padding: 4px 2px;
+            box-sizing: border-box;
+        }
+        .chart-bar-miss {
+            background: #d32f2f;
+        }
+        .bar-label {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
@@ -127,6 +174,18 @@
                 {% if form.ip_address.errors %}
                     <div class="error">
                         {% for error in form.ip_address.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.ping_count.label }}
+                {{ form.ping_count(size=10, placeholder="4") }}
+                
+                {% if form.ping_count.errors %}
+                    <div class="error">
+                        {% for error in form.ping_count.errors %}
                             <div>{{ error }}</div>
                         {% endfor %}
                     </div>
@@ -152,21 +211,38 @@
         
         {% if ping_data is not none %}
             <div class="results">
-                <h3>Ping Result</h3>
-                <p><strong>Status:</strong>
-                    {% if ping_data['success'] %}
-                        Success
-                    {% else %}
-                        Failure
-                    {% endif %}
-                </p>
-                <p><strong>Latency:</strong>
-                    {% if ping_data['latency'] is not none %}
-                        {{ "%.2f" | format(ping_data['latency']) }} ms
+                <h3>Ping Results for {{ ping_data.host }}</h3>
+                <p><strong>Sent:</strong> {{ ping_data.count }}</p>
+                <p><strong>Success:</strong> {{ ping_data.success_count }}</p>
+                <p><strong>Loss:</strong> {{ ping_data.loss_count }}</p>
+                <p><strong>Average:</strong>
+                    {% if ping_data.avg_latency is not none %}
+                        {{ "%.2f" | format(ping_data.avg_latency) }} ms
                     {% else %}
                         N/A
                     {% endif %}
                 </p>
+                <div class="chart-card">
+                    <h4>Latency Chart</h4>
+                    <div class="chart-grid">
+                        {% for result in ping_data.results %}
+                            {% set bar_height = ((result.latency / ping_data.max_display_latency * 100) if result.latency is not none else 10) %}
+                            <div class="bar-wrapper">
+                                <div class="chart-bar {% if not result.success %}chart-bar-miss{% endif %}"
+                                     style="height: {{ bar_height|round(0) }}%;">
+                                    <span class="bar-value">
+                                        {% if result.latency is not none %}
+                                            {{ result.latency|round(1) }}ms
+                                        {% else %}
+                                            timeout
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <span class="bar-label">#{{ loop.index }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         {% endif %}
         
