@@ -94,6 +94,22 @@
             color: #666;
             font-size: 14px;
         }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #d1e7dd;
+            border-radius: 6px;
+            background-color: #f8faf8;
+        }
+        .results h3 {
+            margin-top: 0;
+            color: #155724;
+        }
+        .results p {
+            margin: 8px 0;
+            color: #333;
+            font-size: 15px;
+        }
     </style>
 </head>
 <body>
@@ -131,6 +147,26 @@
         {% if error %}
             <div class="alert alert-error">
                 <strong>Error:</strong> {{ error }}
+            </div>
+        {% endif %}
+        
+        {% if ping_data is not none %}
+            <div class="results">
+                <h3>Ping Result</h3>
+                <p><strong>Status:</strong>
+                    {% if ping_data['success'] %}
+                        Success
+                    {% else %}
+                        Failure
+                    {% endif %}
+                </p>
+                <p><strong>Latency:</strong>
+                    {% if ping_data['latency'] is not none %}
+                        {{ "%.2f" | format(ping_data['latency']) }} ms
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </p>
             </div>
         {% endif %}
         

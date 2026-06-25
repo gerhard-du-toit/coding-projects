@@ -29,8 +29,18 @@ class PingMonitor:
         
     def ping_once(self):
         """
-        Perform a single ICMP ping and return latency in ms
-        Returns None if ping fails
+        Perform a single ICMP ping and return structured ping information.
+
+        Returns a dict like:
+            {
+                "success": True,
+                "latency": 34.0
+            }
+        or when ping fails:
+            {
+                "success": False,
+                "latency": None
+            }
         """
         try:
             if sys.platform == "win32":
@@ -42,10 +52,9 @@ class PingMonitor:
                     timeout=5
                 )
                 if result.returncode == 0:
-                    # Parse output for latency
                     match = re.search(r"time[<=]+(\d+)ms", result.stdout)
                     if match:
-                        return float(match.group(1))
+                        return {"success": True, "latency": float(match.group(1))}
             else:
                 # Unix/Linux/Mac ping command
                 result = subprocess.run(
@@ -55,14 +64,13 @@ class PingMonitor:
                     timeout=5
                 )
                 if result.returncode == 0:
-                    # Parse output for latency
                     match = re.search(r"time=(\d+\.?\d*)ms", result.stdout)
                     if match:
-                        return float(match.group(1))
-            return None
+                        return {"success": True, "latency": float(match.group(1))}
+            return {"success": False, "latency": None}
         except Exception as e:
             print(f"Error pinging: {e}")
-            return None
+            return {"success": False, "latency": None}
     
     def get_statistics(self):
         """Calculate statistics for collected latencies"""
@@ -77,12 +85,13 @@ class PingMonitor:
             "stdev": statistics.stdev(latency_list) if len(latency_list) > 1 else 0
         }
     
-    def display_status(self, latency):
+    def display_status(self, ping_result):
         """Display current ping status"""
         self.packet_count += 1
         timestamp = datetime.now().strftime("%H:%M:%S")
         
-        if latency is not None:
+        if ping_result.get("success"):
+            latency = ping_result.get("latency")
             self.latencies.append(latency)
             stats = self.get_statistics()
             
@@ -117,8 +126,8 @@ class PingMonitor:
             start_time = time.time()
             
             while True:
-                latency = self.ping_once()
-                self.display_status(latency)
+                ping_result = self.ping_once()
+                self.display_status(ping_result)
                 
                 if duration and (time.time() - start_time) >= duration:
                     break
@@ -145,11 +154,4 @@ class PingMonitor:
             print(f"Max latency: {stats['max']:.2f}ms")
             print(f"Avg latency: {stats['avg']:.2f}ms")
             print(f"Std deviation: {stats['stdev']:.2f}ms")
-
-
-if __name__ == "__main__":
-    # Create monitor for 8.8.8.8 and start monitoring
-    monitor = PingMonitor(host="8.8.8.8", window_size=10, interval=1)
-    monitor.monitor()   
-
 

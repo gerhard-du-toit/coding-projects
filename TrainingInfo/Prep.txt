@@ -1,0 +1,26 @@
+My recommendation for you specifically
+Phase 1 — Start Simple (No WSL)
+
+Install:
+
+Visual Studio Code
+Git for Windows
+Python for Windows
+
+Then:
+
+create a GitHub account
+make a repo
+write small Python tools
+learn commits/branches/releases
+
+This gets you productive quickly.
+
+gduto@DESKTOP-KQDP9T6 MINGW64 ~
+$ py --version
+Python 3.14.5
+
+gduto@DESKTOP-KQDP9T6 MINGW64 ~
+$ py --version
+Python 3.14.5
+

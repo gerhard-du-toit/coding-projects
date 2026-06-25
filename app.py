@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, IPAddress
 import ipaddress
+from monitor.ping_monitor import PingMonitor
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-this'
@@ -25,17 +26,30 @@ def home():
     form = IPAddressForm()
     result = None
     error = None
+    ping_data = None
     
     if form.validate_on_submit():
         ip = form.ip_address.data
         try:
             # Validate IP address
             ipaddress.ip_address(ip)
-            result = f"Successfully validated IP: {ip}"
+            monitor = PingMonitor(host=ip)
+            ping_data = monitor.ping_once()
+
+            if ping_data.get('success'):
+                result = f"Ping successful to {ip}: {ping_data.get('latency'):.2f} ms"
+            else:
+                error = f"Ping failed for {ip}."
         except ValueError:
             error = "Invalid IP address"
     
-    return render_template('index.html', form=form, result=result, error=error)
+    return render_template(
+        'index.html',
+        form=form,
+        result=result,
+        error=error,
+        ping_data=ping_data
+    )
 
 
 @app.route("/api/ping", methods=['POST'])
@@ -49,7 +63,12 @@ def api_ping():
     
     try:
         ipaddress.ip_address(ip)
-        return jsonify({'success': True, 'message': f'IP validated: {ip}'}), 200
+        ping_data = PingMonitor(host=ip).ping_once()
+        return jsonify({
+            'success': ping_data.get('success', False),
+            'latency': ping_data.get('latency'),
+            'ip': ip
+        }), 200
     except ValueError:
         return jsonify({'error': 'Invalid IP address format'}), 400
 
